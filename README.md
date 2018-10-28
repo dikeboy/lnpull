@@ -22,3 +22,4 @@ how  to  use
         })
         pullLinearLayout.finishLoading()
   
+![image](https://github.com/dikeboy/lnpull/blob/master/screenshot/shot1.gif)
