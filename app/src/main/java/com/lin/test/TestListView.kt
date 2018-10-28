@@ -24,21 +24,15 @@ import kotlinx.android.synthetic.main.test_listview.*
  */
 class TestListView : AppCompatActivity(){
     lateinit var  list: ArrayList<String>
+    lateinit var  adapter: MAdapter;
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.test_listview)
         list = ArrayList<String>()
-        for(i in 1..50){
-            list.add("nihaoya"+i)
-        }
-
-        testListView()
-    }
-
-    fun testListView(){
 
         var handler = Handler()
-        pullLinearLayout.setAdapter(MAdapter())
+        adapter  = MAdapter()
+        pullLinearLayout.setAdapter(adapter)
         pullLinearLayout.setOnPullClickListener(object: PullListView.PullClickListener{
             override fun onRefrensh() {
 
@@ -52,7 +46,13 @@ class TestListView : AppCompatActivity(){
             }
 
             override fun onMoreClick(): Boolean {
-                return false
+                if(list.size>10){
+                    handler.postDelayed({
+                            testListView();
+                    },1500)
+                    return false
+                }
+                return true
             }
 
             override fun onRefrenshPause() {
@@ -60,7 +60,16 @@ class TestListView : AppCompatActivity(){
         })
         handler.postDelayed({
             pullLinearLayout.finishLoading()
+            pullLinearLayout.showLoadingMore();
         },1500)
+        testListView()
+    }
+
+    fun testListView(){
+        for(i in 1..50){
+            list.add("nihaoya"+i)
+        }
+        adapter.notifyDataSetChanged()
     }
 
     inner  class MAdapter: BaseAdapter(){
