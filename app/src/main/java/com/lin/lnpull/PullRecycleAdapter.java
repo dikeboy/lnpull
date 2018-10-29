@@ -4,6 +4,7 @@ import android.support.annotation.NonNull;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.StaggeredGridLayoutManager;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 
@@ -17,16 +18,20 @@ public  abstract class PullRecycleAdapter<VH extends  PullRecycleAdapter.PullVie
     public static int VIEW_TYPE_HEADER=0;
     public static int VIEW_TYPE_CONTENT=1;
     public static int VIEW_TYPE_BOTTOM=2;
-    protected PullToRecycleView pullToRecycleView;
+    protected PullRecycleView pullRecycleView;
+    private boolean  needShowMore  = false;
 
-    public PullRecycleAdapter(PullToRecycleView pullToRecycleView){
-        this.pullToRecycleView = pullToRecycleView;
+    public PullRecycleAdapter(PullRecycleView pullRecycleView){
+        this.pullRecycleView = pullRecycleView;
     }
     @NonNull
     @Override
     public PullViewHolder onCreateViewHolder(@NonNull ViewGroup viewGroup, int i) {
         if(i==VIEW_TYPE_HEADER){
-            return new PullViewHolder(pullToRecycleView.getHeader());
+            return new PullViewHolder(pullRecycleView.getListView().getHeader());
+        }
+        else if(i==VIEW_TYPE_BOTTOM){
+            return new PullViewHolder(pullRecycleView.getMoreLayout());
         }
         else{
             return onCreateMViewHolder(viewGroup,i);
@@ -34,14 +39,19 @@ public  abstract class PullRecycleAdapter<VH extends  PullRecycleAdapter.PullVie
     }
     @Override
     public void onBindViewHolder(@NonNull PullViewHolder pullViewHolder, int i) {
-        if(i>0){
+        if(i>0&&i<=getMItemCount()){
             onBindMViewHolder((VH)pullViewHolder,i-1);
         }
     }
 
     @Override
     public int getItemCount() {
-        return getMItemCount()+1;
+        if(needShowMore){
+            return getMItemCount()+2;
+        }
+        else{
+            return getMItemCount()+1;
+        }
     }
 
     public abstract PullViewHolder onCreateMViewHolder(ViewGroup viewGroup, int i);
@@ -51,6 +61,9 @@ public  abstract class PullRecycleAdapter<VH extends  PullRecycleAdapter.PullVie
     public int getItemViewType(int position) {
         if(position==0){
             return  VIEW_TYPE_HEADER;
+        }
+        else if(position>getMItemCount()){
+            return VIEW_TYPE_BOTTOM;
         }
         return VIEW_TYPE_CONTENT;
     }
@@ -64,8 +77,22 @@ public  abstract class PullRecycleAdapter<VH extends  PullRecycleAdapter.PullVie
             gridManager.setSpanSizeLookup(new GridLayoutManager.SpanSizeLookup() {
                 @Override
                 public int getSpanSize(int position) {
-                    return getItemViewType(position) == VIEW_TYPE_HEADER
-                            ? gridManager.getSpanCount() : 1;
+                    if(getItemViewType(position) == VIEW_TYPE_HEADER){
+                        return gridManager.getSpanCount();
+                    }
+                    if(needShowMore){
+                        if(getMItemCount()%2==0){
+                            if(getItemViewType(position) == VIEW_TYPE_BOTTOM){
+                                return gridManager.getSpanCount();
+                            }
+                        }
+                        else{
+                            if(position>=getMItemCount()){
+                                return gridManager.getSpanCount();
+                            }
+                        }
+                    }
+                    return 1;
                 }
             });
         }
@@ -85,9 +112,16 @@ public  abstract class PullRecycleAdapter<VH extends  PullRecycleAdapter.PullVie
     static  public class PullViewHolder extends  RecyclerView.ViewHolder{
         public PullViewHolder(View itemView){
             super(itemView);
+            RecyclerView.LayoutParams lp =new RecyclerView.LayoutParams( RecyclerView.LayoutParams.MATCH_PARENT,RecyclerView.LayoutParams.WRAP_CONTENT);
+            itemView.setLayoutParams(lp);
         }
     }
 
 
+    public void showMore(boolean needShowMore){
+        Log.e("lin","showMore");
+       this.needShowMore = needShowMore;
+       notifyDataSetChanged();
+    }
 }
 

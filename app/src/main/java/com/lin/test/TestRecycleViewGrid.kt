@@ -27,14 +27,20 @@ class TestRecycleViewGrid : AppCompatActivity(){
         super.onCreate(savedInstanceState)
         setContentView(R.layout.test_recycleview_linearlayout)
         list = ArrayList<String>()
-        for(i in 1..50){
+        for(i in 1..49){
             list.add("nihaoya"+i)
         }
         id_recyclerview =pullRecycleView.listView
         id_recyclerview.setLayoutManager( GridLayoutManager(this,2));
 
-        id_recyclerview.adapter = HomeAdapter(id_recyclerview);
+        id_recyclerview.adapter = HomeAdapter(pullRecycleView);
         testListView()
+    }
+    fun testAddView(){
+        for(i in 1..50){
+            list.add("nihaoya"+i)
+        }
+        id_recyclerview.adapter?.notifyDataSetChanged()
     }
     fun testListView(){
 
@@ -52,7 +58,13 @@ class TestRecycleViewGrid : AppCompatActivity(){
             }
 
             override fun onMoreClick(): Boolean {
-                return false
+                if(list.size>10){
+                    handler.postDelayed({
+                        testAddView();
+                    },2000)
+                    return false
+                }
+                return true
             }
 
             override fun onRefrenshPause() {
@@ -60,14 +72,14 @@ class TestRecycleViewGrid : AppCompatActivity(){
         })
         handler.postDelayed({
             pullRecycleView.finishLoading()
+            pullRecycleView.showLoadingMore();
         },1500)
     }
-
 
     inner  class HomeAdapter: PullRecycleAdapter<HomeAdapter.MyViewHolder>{
 
 
-        constructor(pullToRecycleView : PullToRecycleView): super(pullToRecycleView){
+        constructor(pullRecycleView : PullRecycleView): super(pullRecycleView){
 
         }
 

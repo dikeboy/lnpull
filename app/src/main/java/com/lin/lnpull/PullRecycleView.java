@@ -2,15 +2,15 @@ package com.lin.lnpull;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.support.annotation.NonNull;
+import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.widget.AbsListView;
+import android.widget.*;
 import android.widget.AbsListView.OnScrollListener;
-import android.widget.BaseAdapter;
-import android.widget.RelativeLayout;
-import android.widget.TextView;
 import com.lin.lnpull.PullToRefreshListView.OnRefreshListener;
 
 import java.util.HashMap;
@@ -51,6 +51,36 @@ public class PullRecycleView extends PullBaseDetailLayout implements ListLoading
 		moreText = (TextView) moreLayout.findViewById(R.id.loadingMoreTv);
 		moreLayout.setOnClickListener(this);
 		listView.setOnRefreshListener(this);
+		listView.addOnScrollListener(new RecyclerView.OnScrollListener(){
+			@Override
+			public void onScrollStateChanged(@NonNull RecyclerView recyclerView, int newState) {
+				super.onScrollStateChanged(recyclerView, newState);
+			}
+
+			@Override
+			public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
+				super.onScrolled(recyclerView, dx, dy);
+				if(recyclerView.getLayoutManager() instanceof LinearLayoutManager){
+					int visibleItemCount =recyclerView.getChildCount();
+					int firstVisibleItem = ((LinearLayoutManager) recyclerView.getLayoutManager()).findFirstVisibleItemPosition();
+					int totalItemCount = ((LinearLayoutManager) recyclerView.getLayoutManager()).getItemCount();
+
+					if (firstVisibleItem + visibleItemCount >= totalItemCount
+							&& totalItemCount > 0 && mPullClickListener != null) {
+						if (canLoader()&&loader.get(firstVisibleItem+visibleItemCount)==null && !mPullClickListener.onMoreClick()){
+							loader.put(firstVisibleItem+visibleItemCount, true);
+							moreText.setText(R.string.pull_loading_more);
+						}
+					}
+					else if(mPullClickListener!=null&&firstVisibleItem+visibleItemCount< totalItemCount-1&&loader.size()>0){
+						moreText.setText(R.string.pull_loading_more);
+						loader.clear();
+					}
+
+				}
+
+			}
+		});
 
 
 	}
@@ -96,6 +126,7 @@ public class PullRecycleView extends PullBaseDetailLayout implements ListLoading
 	public void showLoadingMore() {
 		if (footLayout == null) {
 			footLayout = moreLayout;
+			listView.getAdapter().showMore(true);
 		}
 		moreText.setText(R.string.pull_loading_more);
 	}
@@ -103,12 +134,18 @@ public class PullRecycleView extends PullBaseDetailLayout implements ListLoading
 	public void hideLoadingMore() {
 		if (footLayout != null) {
 			footLayout = null;
+			listView.getAdapter().showMore(false);
 		}
 	}
-
+	public boolean canLoader() {
+		String text = getResources().getString(R.string.pull_loading_more);
+		return footLayout!=null
+				&& moreText.getText().toString().trim().equals(text.trim());
+	}
 	public void showClickMore() {
 		if (footLayout == null) {
 			footLayout = moreLayout;
+			listView.getAdapter().showMore(true);
 		}
 		moreText.setText(R.string.pull_click_more);
 	}
@@ -152,7 +189,9 @@ public class PullRecycleView extends PullBaseDetailLayout implements ListLoading
 			mPullClickListener.onRetry();
 		}
 	}
-
+	public RelativeLayout getMoreLayout(){
+		return moreLayout;
+	}
 	public void setAdapter(RecyclerView.Adapter adapter){
 		listView.setAdapter(adapter);
 	}

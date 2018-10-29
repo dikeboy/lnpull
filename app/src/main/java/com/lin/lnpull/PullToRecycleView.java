@@ -126,6 +126,7 @@ public class PullToRecycleView extends RecyclerView {
                     R.layout.lnpull_to_refresh_header, this, false);
             measureView(refrenshView);
             mRefreshViewHeight = refrenshView.getMeasuredHeight();
+
         }
         return header;
     }
@@ -159,8 +160,8 @@ public class PullToRecycleView extends RecyclerView {
     @Override
     public boolean dispatchTouchEvent(MotionEvent event) {
         // TODO Auto-generated method stub
-        Log.e("lin","action="+event.getAction()+",state="+mRefreshState+",height="+ header.getHeight()+",isTouchDown="+isTouchDown
-        +",scrollY="+getLayoutManager().findViewByPosition(0));
+//        Log.e("lin","action="+event.getAction()+",state="+mRefreshState+",height="+ header.getHeight()+",isTouchDown="+isTouchDown
+//        +",scrollY="+getLayoutManager().findViewByPosition(0));
         if(!enableRefrensh){
             return super.dispatchTouchEvent(event);
         }
@@ -521,5 +522,10 @@ public class PullToRecycleView extends RecyclerView {
         this.enable_horizontaltouch = touch;
     }
 
+    @Nullable
+    @Override
+    public PullRecycleAdapter getAdapter() {
+        return (PullRecycleAdapter)super.getAdapter();
+    }
 
 }
