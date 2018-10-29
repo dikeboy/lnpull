@@ -5,24 +5,22 @@ import android.os.Bundle
 import android.os.Handler
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.GridLayoutManager
-import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
-import android.support.v7.widget.StaggeredGridLayoutManager
-import android.util.Log
 import android.view.View
 import android.view.ViewGroup
-import android.widget.BaseAdapter
 import android.widget.LinearLayout
 import android.widget.TextView
-import com.lin.lnpull.*
-import kotlinx.android.synthetic.main.test_listview.*
+import com.lin.lnpull.PullRecycleAdapter
+import com.lin.lnpull.PullRecycleView
+import com.lin.lnpull.PullToRecycleView
+import com.lin.lnpull.R
 import kotlinx.android.synthetic.main.test_recycleview_linearlayout.*
 
 /**
  * author : leo
  * date   : 2018/10/2822:29
  */
-class TestRecycleViewLinearlayout : AppCompatActivity(){
+class TestRecycleViewGrid : AppCompatActivity(){
     lateinit var  list: ArrayList<String>
     lateinit var  id_recyclerview: PullToRecycleView
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -32,11 +30,11 @@ class TestRecycleViewLinearlayout : AppCompatActivity(){
         for(i in 1..50){
             list.add("nihaoya"+i)
         }
-         id_recyclerview =pullRecycleView.listView
-        id_recyclerview.setLayoutManager( LinearLayoutManager(this));
+        id_recyclerview =pullRecycleView.listView
+        id_recyclerview.setLayoutManager( GridLayoutManager(this,2));
 
         id_recyclerview.adapter = HomeAdapter(id_recyclerview);
-      testListView()
+        testListView()
     }
     fun testListView(){
 

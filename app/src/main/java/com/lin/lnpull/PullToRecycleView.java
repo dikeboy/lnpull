@@ -126,19 +126,6 @@ public class PullToRecycleView extends RecyclerView {
                     R.layout.lnpull_to_refresh_header, this, false);
             measureView(refrenshView);
             mRefreshViewHeight = refrenshView.getMeasuredHeight();
-
-            addOnScrollListener(new RecyclerView.OnScrollListener(){
-                @Override
-                public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
-                    super.onScrolled(recyclerView, dx, dy);
-                    Log.e("lin","dex="+dx+",dy="+dy);
-                }
-
-                @Override
-                public void onScrollStateChanged(@NonNull RecyclerView recyclerView, int newState) {
-                    super.onScrollStateChanged(recyclerView, newState);
-                }
-            });
         }
         return header;
     }
