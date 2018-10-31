@@ -3,12 +3,14 @@ package com.lin.test
 import android.graphics.Color
 import android.os.Bundle
 import android.os.Handler
+import android.support.constraint.ConstraintLayout
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.GridLayoutManager
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.support.v7.widget.StaggeredGridLayoutManager
 import android.util.Log
+import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.BaseAdapter
@@ -22,7 +24,7 @@ import kotlinx.android.synthetic.main.test_recycleview_linearlayout.*
  * author : leo
  * date   : 2018/10/2822:29
  */
-class TestRecycleViewLinearlayout : AppCompatActivity(){
+class TestRecycleViewLinearlayout : BaseActivity(){
     lateinit var  list: ArrayList<String>
     lateinit var  id_recyclerview: PullToRecycleView
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -34,6 +36,9 @@ class TestRecycleViewLinearlayout : AppCompatActivity(){
         }
          id_recyclerview =pullRecycleView.listView
         id_recyclerview.setLayoutManager( LinearLayoutManager(this));
+
+        var headView : ConstraintLayout = LayoutInflater.from(this).inflate(R.layout.test_header_view,null) as ConstraintLayout
+        id_recyclerview.selfHeadView  = headView
 
         id_recyclerview.adapter = HomeAdapter(pullRecycleView);
       testListView()

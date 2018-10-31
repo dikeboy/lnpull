@@ -15,6 +15,7 @@ import android.widget.TextView
 import com.lin.lnpull.PullListView
 import com.lin.lnpull.PullToRefreshListView
 import com.lin.lnpull.R
+import com.lin.lnpull.R.id.pullLinearLayout
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.test_listview.*
 
@@ -22,7 +23,7 @@ import kotlinx.android.synthetic.main.test_listview.*
  * author : leo
  * date   : 2018/10/2822:28
  */
-class TestListView : AppCompatActivity(){
+class TestListView : BaseActivity(){
     lateinit var  list: ArrayList<String>
     lateinit var  adapter: MAdapter;
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -108,5 +109,6 @@ class TestListView : AppCompatActivity(){
             lateinit var nameTv: TextView
         }
     }
+
 
 }

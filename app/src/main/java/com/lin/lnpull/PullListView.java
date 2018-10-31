@@ -15,6 +15,7 @@ import android.widget.AbsListView;
 import android.widget.AbsListView.OnScrollListener;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+import com.lin.lnpull.headlayout.SignHeadLayout;
 
 /**
  * author : leo
@@ -45,7 +46,7 @@ public class PullListView extends PullBaseDetailLayout implements ListLoading, O
 	public void childInit(View view,Context context) {
 		listView = (PullToRefreshListView) view
 				.findViewById(R.id.pull_refresh_list);
-
+		listView.setHeaderLayout(new SignHeadLayout(context));
 		moreLayout = (RelativeLayout) LayoutInflater.from(context).inflate(
 				R.layout.lnpull_base_loading_more, null);
 		moreText = (TextView) moreLayout.findViewById(R.id.loadingMoreTv);

@@ -3,9 +3,12 @@ package com.lin.test
 import android.graphics.Color
 import android.os.Bundle
 import android.os.Handler
+import android.support.constraint.ConstraintLayout
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.GridLayoutManager
 import android.support.v7.widget.RecyclerView
+import android.text.Layout
+import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.LinearLayout
@@ -20,7 +23,7 @@ import kotlinx.android.synthetic.main.test_recycleview_linearlayout.*
  * author : leo
  * date   : 2018/10/2822:29
  */
-class TestRecycleViewGrid : AppCompatActivity(){
+class TestRecycleViewGrid : BaseActivity(){
     lateinit var  list: ArrayList<String>
     lateinit var  id_recyclerview: PullToRecycleView
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -31,7 +34,9 @@ class TestRecycleViewGrid : AppCompatActivity(){
             list.add("nihaoya"+i)
         }
         id_recyclerview =pullRecycleView.listView
+        var headView : ConstraintLayout = LayoutInflater.from(this).inflate(R.layout.test_header_view,null) as ConstraintLayout
         id_recyclerview.setLayoutManager( GridLayoutManager(this,2));
+        id_recyclerview.selfHeadView  = headView
 
         id_recyclerview.adapter = HomeAdapter(pullRecycleView);
         testListView()

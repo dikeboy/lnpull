@@ -13,12 +13,16 @@ import android.view.*;
 import android.view.animation.LinearInterpolator;
 import android.view.animation.RotateAnimation;
 import android.widget.*;
+import com.lin.lnpull.headlayout.BasicHeaderLayout;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * author : leo
  * date   : 2018/10/2817:10
  */
-public class PullToRecycleView extends RecyclerView {
+public class PullToRecycleView extends RecyclerView implements  RefrenshState {
     private static final int TAP_TO_REFRESH = 1;
     private static final int PULL_TO_REFRESH = 2;
     private static final int RELEASE_TO_REFRESH = 3;
@@ -34,17 +38,10 @@ public class PullToRecycleView extends RecyclerView {
     private AbsListView.OnScrollListener mOnScrollListener;
     private LayoutInflater mInflater;
 
-    private RelativeLayout mRefreshView;
-    private TextView mRefreshViewText;
-    private ImageView mRefreshViewImage;
-    private ProgressBar mRefreshViewProgress;
-    private TextView mRefreshViewLastUpdated;
+
 
     private int mCurrentScrollState;
     private int mRefreshState;
-
-    private RotateAnimation mFlipAnimation;
-    private RotateAnimation mReverseFlipAnimation;
 
     private int mRefreshViewHeight;
     private int mLastMotionY;
@@ -66,6 +63,8 @@ public class PullToRecycleView extends RecyclerView {
     private int scroll_position = 0;
     private boolean enable_horizontaltouch;
     private Context context;
+    private BasicHeaderLayout mSignHeadLayout;
+    private View  selfHeadView;
 
     public PullToRecycleView(@NonNull Context context) {
         super(context, (AttributeSet)null);
@@ -84,54 +83,23 @@ public class PullToRecycleView extends RecyclerView {
         this.context = context;
         final ViewConfiguration configuration = ViewConfiguration.get(context);
         mTouchSlop = configuration.getScaledTouchSlop();
-
-        mFlipAnimation = new RotateAnimation(0, -180,
-                RotateAnimation.RELATIVE_TO_SELF, 0.5f,
-                RotateAnimation.RELATIVE_TO_SELF, 0.5f);
-        mFlipAnimation.setInterpolator(new LinearInterpolator());
-        mFlipAnimation.setDuration(250);
-        mFlipAnimation.setFillAfter(true);
-        mReverseFlipAnimation = new RotateAnimation(-180,0,
-                RotateAnimation.RELATIVE_TO_SELF, 0.5f,
-                RotateAnimation.RELATIVE_TO_SELF, 0.5f);
-        mReverseFlipAnimation.setInterpolator(new LinearInterpolator());
-        mReverseFlipAnimation.setDuration(250);
-        mReverseFlipAnimation.setFillAfter(true);
-        mReverseFlipAnimation.setFillBefore(true);
-
     }
 
     public  PullListHeaderLayout getHeader(){
         if(header==null){
-            mInflater = (LayoutInflater) context.getSystemService(
-                    Context.LAYOUT_INFLATER_SERVICE);
             header =new PullListHeaderLayout(context);
-            mRefreshView = (RelativeLayout) mInflater.inflate(
-                    R.layout.lnpull_to_refresh_header, this, false);
-            mRefreshViewText =
-                    (TextView) mRefreshView.findViewById(R.id.pull_to_refresh_text);
-            mRefreshViewImage =
-                    (ImageView) mRefreshView.findViewById(R.id.pull_to_refresh_image);
-            mRefreshViewProgress =
-                    (ProgressBar) mRefreshView.findViewById(R.id.pull_to_refresh_progress);
-            mRefreshViewLastUpdated =
-                    (TextView) mRefreshView.findViewById(R.id.pull_to_refresh_updated_at);
-            mRefreshView.setOnClickListener(new PullToRecycleView.OnClickRefreshListener());
-
             mRefreshState = TAP_TO_REFRESH;
-
-            header.addView(mRefreshView);
-
-            RelativeLayout refrenshView =  (RelativeLayout) mInflater.inflate(
-                    R.layout.lnpull_to_refresh_header, this, false);
-            measureView(refrenshView);
-            mRefreshViewHeight = refrenshView.getMeasuredHeight();
-
+            header.addView(mSignHeadLayout.getRefrenshView());
+            measureView(mSignHeadLayout.getRefrenshView());
+            mRefreshViewHeight = mSignHeadLayout.getRefrenshView().getMeasuredHeight();
         }
         return header;
     }
 
-
+    @Override
+    public void setHeaderLayout(BasicHeaderLayout headerLayout) {
+        this.mSignHeadLayout = headerLayout;
+    }
 
     /**
      * Register a callback to be invoked when this list should be refreshed.
@@ -142,19 +110,6 @@ public class PullToRecycleView extends RecyclerView {
         mOnRefreshListener = onRefreshListener;
     }
 
-    /**
-     * Set a text to represent when the list was last updated.
-     * @param lastUpdated Last updated at.
-     */
-    public void setLastUpdated(CharSequence lastUpdated) {
-        if (lastUpdated != null) {
-            mRefreshViewLastUpdated.setVisibility(View.VISIBLE);
-            mRefreshViewLastUpdated.setText(lastUpdated);
-        } else {
-            mRefreshViewLastUpdated.setVisibility(View.GONE);
-        }
-
-    }
     private int mActivePointerId;
     private boolean isReset;
     @Override
@@ -263,27 +218,19 @@ public class PullToRecycleView extends RecyclerView {
                 if(mLastMotionY<y&&(!enable_horizontaltouch||scroll_position == SCROLL_POSITION_VERTICAL)&&getScrollY()==0&&getLayoutManager().findViewByPosition(0)!=null){
                     int dis = (y -mLastMotionY)/2;
                     if(dis>mRefreshViewHeight&&mRefreshState==PULL_TO_REFRESH){
-                        mRefreshViewText.setText(R.string.pull_to_refresh_release_label);
                         mRefreshState = RELEASE_TO_REFRESH;
-                        mRefreshViewImage.clearAnimation();
-                        mRefreshViewImage.startAnimation(mFlipAnimation);
+                        mSignHeadLayout.pushUpAnim();
                     }
                     else if(mRefreshState == TAP_TO_REFRESH){
-                        mRefreshViewText.setText(R.string.pull_to_refresh_pull_label);
                         mRefreshState = PULL_TO_REFRESH;
-                        mRefreshViewImage.setVisibility(View.VISIBLE);
-                        mRefreshViewImage.clearAnimation();
-                        mRefreshViewImage.startAnimation(mReverseFlipAnimation);
+                        mSignHeadLayout.pullDownAnim();
                         event.setAction(MotionEvent.ACTION_CANCEL);
                         super.dispatchTouchEvent(event);
                         event.setAction(MotionEvent.ACTION_MOVE);
                     }
                     else if(dis<mRefreshViewHeight&&mRefreshState == RELEASE_TO_REFRESH){
-                        mRefreshViewText.setText(R.string.pull_to_refresh_pull_label);
                         mRefreshState = PULL_TO_REFRESH;
-                        mRefreshViewImage.setVisibility(View.VISIBLE);
-                        mRefreshViewImage.clearAnimation();
-                        mRefreshViewImage.startAnimation(mReverseFlipAnimation);
+                        mSignHeadLayout.pullDownAnim();
                     }
                     header.setHeaderHeight(dis);
 //                    Log.e("lin","走不动了" +",dis="+dis);
@@ -358,15 +305,7 @@ public class PullToRecycleView extends RecyclerView {
             mRefreshState = TAP_TO_REFRESH;
             // Set refresh view text to the pull label
             header.setHeaderHeight(0);
-            mRefreshViewText.setText(R.string.pull_to_refresh_pull_label);
-            // Replace refresh drawable with arrow drawable
-            mRefreshViewImage.setImageResource(R.drawable.lnpull_refresh_arrow_down
-            );
-            // Clear the full rotation animation
-            mRefreshViewImage.clearAnimation();
-            // Hide progress bar and arrow.
-            mRefreshViewImage.setVisibility(View.GONE);
-            mRefreshViewProgress.setVisibility(View.GONE);
+            mSignHeadLayout.reset();
         }
     }
 
@@ -392,12 +331,7 @@ public class PullToRecycleView extends RecyclerView {
 
 
     public void prepareForRefresh() {
-        mRefreshViewImage.setVisibility(View.GONE);
-        // We need this hack, otherwise it will keep the previous drawable.
-        mRefreshViewImage.setImageDrawable(null);
-        mRefreshViewProgress.setVisibility(View.VISIBLE);
-        // Set refresh view text to the refreshing label
-        mRefreshViewText.setText(R.string.pull_to_refresh_refreshing_label);
+        mSignHeadLayout.onRefrensh();
         mRefreshState = REFRESHING;
     }
 
@@ -409,18 +343,6 @@ public class PullToRecycleView extends RecyclerView {
         }
     }
 
-    /**
-     * Resets the list to a normal state after a refresh.
-     * @param lastUpdated Last updated at.
-     */
-    public void onRefreshComplete(CharSequence lastUpdated) {
-        setLastUpdated(lastUpdated);
-        onRefreshComplete();
-    }
-
-    /**
-     * Resets the list to a normal state after a refresh.
-     */
     public void onRefreshComplete() {
         Log.d(TAG, "onRefreshComplete");
 
@@ -432,22 +354,7 @@ public class PullToRecycleView extends RecyclerView {
             handler.post(new PullToRecycleView.MRefrenshBackRunnable());
         }
     }
-    /**
-     * Invoked when the refresh view is clicked on. This is mainly used when
-     * there's only a few items in the list and it's not possible to drag the
-     * list.
-     */
-    private class OnClickRefreshListener implements OnClickListener {
 
-        @Override
-        public void onClick(View v) {
-            if (mRefreshState != REFRESHING) {
-                prepareForRefresh();
-                onRefresh();
-            }
-        }
-
-    }
 
     /**
      * Interface definition for a callback to be invoked when list should be
@@ -528,4 +435,23 @@ public class PullToRecycleView extends RecyclerView {
         return (PullRecycleAdapter)super.getAdapter();
     }
 
+    public void setSelfHeadView(View view){
+       this.selfHeadView = view;
+    }
+
+    public int getHeaderViewCount(){
+        int i = selfHeadView==null?0:1;
+        if(enableRefrensh){
+            return i+1;
+        }
+       return i;
+    }
+
+    public View getSelfHeadView(){
+        return selfHeadView;
+    }
+
+    public void removeHeaderViews(){
+        selfHeadView = null;
+    }
 }

@@ -9,6 +9,7 @@ import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.LinearLayout;
+import com.lin.lnpull.headlayout.SignHeadLayout;
 
 /**
  * author : leo
@@ -42,6 +43,7 @@ public class PullScrollView  extends PullBaseDetailLayout implements OnRefreshLi
 	public void childInit(View view, Context context) {
 		// TODO Auto-generated method stub
 		super.childInit(view, context);
+		scrollView.setHeaderLayout(new SignHeadLayout(context));
 	}
 	public void addChildView(View view) {
 		// TODO Auto-generated method stub

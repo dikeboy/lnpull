@@ -12,6 +12,7 @@ import android.view.View;
 import android.widget.*;
 import android.widget.AbsListView.OnScrollListener;
 import com.lin.lnpull.PullToRefreshListView.OnRefreshListener;
+import com.lin.lnpull.headlayout.SignHeadLayout;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -45,7 +46,7 @@ public class PullRecycleView extends PullBaseDetailLayout implements ListLoading
 	public void childInit(View view,Context context) {
 		listView = (PullToRecycleView) view
 				.findViewById(R.id.pull_refresh_list);
-
+		listView.setHeaderLayout(new SignHeadLayout(context));
 		moreLayout = (RelativeLayout) LayoutInflater.from(context).inflate(
 				R.layout.lnpull_base_loading_more, null);
 		moreText = (TextView) moreLayout.findViewById(R.id.loadingMoreTv);

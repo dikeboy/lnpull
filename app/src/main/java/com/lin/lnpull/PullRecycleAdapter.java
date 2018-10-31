@@ -15,9 +15,10 @@ import java.util.List;
  * date   : 2018/10/2915:37
  */
 public  abstract class PullRecycleAdapter<VH extends  PullRecycleAdapter.PullViewHolder> extends RecyclerView.Adapter<PullRecycleAdapter.PullViewHolder> {
-    public static int VIEW_TYPE_HEADER=0;
-    public static int VIEW_TYPE_CONTENT=1;
-    public static int VIEW_TYPE_BOTTOM=2;
+    public static int VIEW_TYPE_REFRNSH=0;
+    public static int VIEW_TYPE_HEADER=1;
+    public static int VIEW_TYPE_CONTENT=2;
+    public static int VIEW_TYPE_BOTTOM=3;
     protected PullRecycleView pullRecycleView;
     private boolean  needShowMore  = false;
 
@@ -27,8 +28,11 @@ public  abstract class PullRecycleAdapter<VH extends  PullRecycleAdapter.PullVie
     @NonNull
     @Override
     public PullViewHolder onCreateViewHolder(@NonNull ViewGroup viewGroup, int i) {
-        if(i==VIEW_TYPE_HEADER){
+        if(i==VIEW_TYPE_REFRNSH){
             return new PullViewHolder(pullRecycleView.getListView().getHeader());
+        }
+        else if(i==VIEW_TYPE_HEADER){
+            return new PullViewHolder(pullRecycleView.getListView().getSelfHeadView());
         }
         else if(i==VIEW_TYPE_BOTTOM){
             return new PullViewHolder(pullRecycleView.getMoreLayout());
@@ -39,18 +43,20 @@ public  abstract class PullRecycleAdapter<VH extends  PullRecycleAdapter.PullVie
     }
     @Override
     public void onBindViewHolder(@NonNull PullViewHolder pullViewHolder, int i) {
-        if(i>0&&i<=getMItemCount()){
-            onBindMViewHolder((VH)pullViewHolder,i-1);
+        int headCount = pullRecycleView.getListView().getHeaderViewCount();
+        if(i>=headCount&&i<getMItemCount()+headCount){
+            onBindMViewHolder((VH)pullViewHolder,i-headCount);
         }
     }
 
     @Override
     public int getItemCount() {
+        int headCount = pullRecycleView.getListView().getHeaderViewCount();
         if(needShowMore){
-            return getMItemCount()+2;
+            return getMItemCount()+headCount+1;
         }
         else{
-            return getMItemCount()+1;
+            return getMItemCount()+headCount;
         }
     }
 
@@ -59,13 +65,26 @@ public  abstract class PullRecycleAdapter<VH extends  PullRecycleAdapter.PullVie
     public abstract int getMItemCount();
     @Override
     public int getItemViewType(int position) {
-        if(position==0){
-            return  VIEW_TYPE_HEADER;
+        int headCount = pullRecycleView.getListView().getHeaderViewCount();
+        if(position<headCount){
+            if(pullRecycleView.getListView().isRefrenshEnable()){
+                if(position==0){
+                    return VIEW_TYPE_REFRNSH;
+                }
+                else{
+                    return VIEW_TYPE_HEADER;
+                }
+            }
+            else{
+                return VIEW_TYPE_HEADER;
+            }
+        }else if(position>=headCount&&position<headCount+getMItemCount()){
+            return VIEW_TYPE_CONTENT;
         }
-        else if(position>getMItemCount()){
+        else{
             return VIEW_TYPE_BOTTOM;
         }
-        return VIEW_TYPE_CONTENT;
+
     }
     @Override
     public void onAttachedToRecyclerView(RecyclerView recyclerView) {
@@ -77,7 +96,8 @@ public  abstract class PullRecycleAdapter<VH extends  PullRecycleAdapter.PullVie
             gridManager.setSpanSizeLookup(new GridLayoutManager.SpanSizeLookup() {
                 @Override
                 public int getSpanSize(int position) {
-                    if(getItemViewType(position) == VIEW_TYPE_HEADER){
+                    int headCount = pullRecycleView.getListView().getHeaderViewCount();
+                    if(getItemViewType(position) == VIEW_TYPE_HEADER||getItemViewType(position) == VIEW_TYPE_REFRNSH){
                         return gridManager.getSpanCount();
                     }
                     if(needShowMore){
@@ -87,7 +107,7 @@ public  abstract class PullRecycleAdapter<VH extends  PullRecycleAdapter.PullVie
                             }
                         }
                         else{
-                            if(position>=getMItemCount()){
+                            if(position>=getMItemCount()+headCount-1){
                                 return gridManager.getSpanCount();
                             }
                         }
@@ -119,7 +139,6 @@ public  abstract class PullRecycleAdapter<VH extends  PullRecycleAdapter.PullVie
 
 
     public void showMore(boolean needShowMore){
-        Log.e("lin","showMore");
        this.needShowMore = needShowMore;
        notifyDataSetChanged();
     }

@@ -23,9 +23,10 @@ import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
+import com.lin.lnpull.headlayout.BasicHeaderLayout;
 
 
-public class PullToScrollView extends ScrollView{
+public class PullToScrollView extends ScrollView implements  RefrenshState{
 
     private static final int TAP_TO_REFRESH = 1;
     private static final int PULL_TO_REFRESH = 2;
@@ -42,11 +43,6 @@ public class PullToScrollView extends ScrollView{
     private OnScrollListener mOnScrollListener;
     private LayoutInflater mInflater;
 
-    private RelativeLayout mRefreshView;
-    private TextView mRefreshViewText;
-    private ImageView mRefreshViewImage;
-    private ProgressBar mRefreshViewProgress;
-    private TextView mRefreshViewLastUpdated;
 
     private int mCurrentScrollState;
     private int mRefreshState;
@@ -74,6 +70,7 @@ public class PullToScrollView extends ScrollView{
     private int scroll_position = 0;
     private boolean enable_horizontaltouch;
     private LinearLayout contentLayout;
+    private BasicHeaderLayout mSignHeadLayout;
 
     public PullToScrollView(Context context) {
         super(context);
@@ -108,38 +105,23 @@ public class PullToScrollView extends ScrollView{
         mInflater = (LayoutInflater) context.getSystemService(
                 Context.LAYOUT_INFLATER_SERVICE);
         header =new PullListHeaderLayout(context);
-		mRefreshView = (RelativeLayout) mInflater.inflate(
-				R.layout.lnpull_to_refresh_header, this, false);
-        mRefreshViewText =
-            (TextView) mRefreshView.findViewById(R.id.pull_to_refresh_text);
-        mRefreshViewImage =
-            (ImageView) mRefreshView.findViewById(R.id.pull_to_refresh_image);
-        mRefreshViewProgress =
-            (ProgressBar) mRefreshView.findViewById(R.id.pull_to_refresh_progress);
-        mRefreshViewLastUpdated =
-            (TextView) mRefreshView.findViewById(R.id.pull_to_refresh_updated_at);
-        mRefreshView.setOnClickListener(new OnClickRefreshListener());
+
 
         mRefreshState = TAP_TO_REFRESH;
 
-        header.addView(mRefreshView);
-        
         contentLayout   =new LinearLayout(context);
         contentLayout.setOrientation(LinearLayout.VERTICAL);
         addView(contentLayout,new  LayoutParams(LayoutParams.MATCH_PARENT,LayoutParams.WRAP_CONTENT));
         contentLayout.addView(header);
         setFillViewport(true);
-        RelativeLayout refrenshView =  (RelativeLayout) mInflater.inflate(
-				R.layout.lnpull_to_refresh_header, this, false);
-        measureView(refrenshView);
-        mRefreshViewHeight = refrenshView.getMeasuredHeight();
-    }
-    @Override
-    protected void onAttachedToWindow() {
-        super.onAttachedToWindow();
-    }
 
-
+    }
+    public void setHeaderLayout(BasicHeaderLayout headerLayout){
+        this.mSignHeadLayout = headerLayout;
+        header.addView(mSignHeadLayout.getRefrenshView());
+        measureView(mSignHeadLayout.getRefrenshView());
+        mRefreshViewHeight = mSignHeadLayout.getRefrenshView().getMeasuredHeight();
+    }
     /**
      * Register a callback to be invoked when this list should be refreshed.
      * 
@@ -150,14 +132,6 @@ public class PullToScrollView extends ScrollView{
     }
 
 
-    public void setLastUpdated(CharSequence lastUpdated) {
-        if (lastUpdated != null) {
-            mRefreshViewLastUpdated.setVisibility(View.VISIBLE);
-            mRefreshViewLastUpdated.setText(lastUpdated);
-        } else {
-            mRefreshViewLastUpdated.setVisibility(View.GONE);
-        }
-    }
 	private int mActivePointerId;
 	private boolean isReset;
     @Override
@@ -237,27 +211,19 @@ public class PullToScrollView extends ScrollView{
             	if(mLastMotionY<y&&(!enable_horizontaltouch||scroll_position == SCROLL_POSITION_VERTICAL)&&getScrollY()==0){
             		int dis = (y -mLastMotionY)/2;
             		if(dis>mRefreshViewHeight&&mRefreshState==PULL_TO_REFRESH){
-                          mRefreshViewText.setText(R.string.pull_to_refresh_release_label);
                           mRefreshState = RELEASE_TO_REFRESH;
-                        mRefreshViewImage.clearAnimation();
-                        mRefreshViewImage.startAnimation(mFlipAnimation);
+                          mSignHeadLayout.pushUpAnim();
             		}
             		else if(mRefreshState == TAP_TO_REFRESH){
-                        mRefreshViewText.setText(R.string.pull_to_refresh_pull_label);
                         mRefreshState = PULL_TO_REFRESH;
-                        mRefreshViewImage.setVisibility(View.VISIBLE);
-                      mRefreshViewImage.clearAnimation();
-                      mRefreshViewImage.startAnimation(mReverseFlipAnimation);
+                        mSignHeadLayout.pullDownAnim();
                       event.setAction(MotionEvent.ACTION_CANCEL);
                       super.dispatchTouchEvent(event);
                       event.setAction(MotionEvent.ACTION_MOVE);
             		}
             		else if(dis<mRefreshViewHeight&&mRefreshState == RELEASE_TO_REFRESH){
-                        mRefreshViewText.setText(R.string.pull_to_refresh_pull_label);
                         mRefreshState = PULL_TO_REFRESH;
-                        mRefreshViewImage.setVisibility(View.VISIBLE);
-                        mRefreshViewImage.clearAnimation();
-                        mRefreshViewImage.startAnimation(mReverseFlipAnimation);
+                        mSignHeadLayout.pullDownAnim();
             		}
                 	header.setHeaderHeight(dis);
                 	return true;
@@ -312,14 +278,7 @@ public class PullToScrollView extends ScrollView{
             mRefreshState = TAP_TO_REFRESH;
             // Set refresh view text to the pull label
             header.setHeaderHeight(0);
-            mRefreshViewText.setText(R.string.pull_to_refresh_pull_label);
-            // Replace refresh drawable with arrow drawable
-            mRefreshViewImage.setImageResource(R.drawable.lnpull_refresh_arrow_down);
-            // Clear the full rotation animation
-            mRefreshViewImage.clearAnimation();
-            // Hide progress bar and arrow.
-            mRefreshViewImage.setVisibility(View.GONE);
-            mRefreshViewProgress.setVisibility(View.GONE);
+            mSignHeadLayout.reset();
         }
     }
 
@@ -344,12 +303,7 @@ public class PullToScrollView extends ScrollView{
     }
     
     public void prepareForRefresh() {
-        mRefreshViewImage.setVisibility(View.GONE);
-        // We need this hack, otherwise it will keep the previous drawable.
-        mRefreshViewImage.setImageDrawable(null);
-        mRefreshViewProgress.setVisibility(View.VISIBLE);
-        // Set refresh view text to the refreshing label
-        mRefreshViewText.setText(R.string.pull_to_refresh_refreshing_label);
+        mSignHeadLayout.onRefrensh();
         mRefreshState = REFRESHING;
     }
 
@@ -366,7 +320,7 @@ public class PullToScrollView extends ScrollView{
      * @param lastUpdated Last updated at.
      */
     public void onRefreshComplete(CharSequence lastUpdated) {
-        setLastUpdated(lastUpdated);
+        mSignHeadLayout.onRefreshComplete();
         onRefreshComplete();
     }
 

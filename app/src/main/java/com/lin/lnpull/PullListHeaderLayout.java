@@ -66,7 +66,6 @@ public class PullListHeaderLayout extends  ViewGroup{
 			return;
 		}
 		this.mHeight = height;
-		Log.e("lin","height="+height);
 		requestLayout();
 	}
 	@Override

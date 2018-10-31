@@ -22,7 +22,7 @@ import org.w3c.dom.Text
  * author : leo
  * date   : 2018/10/2822:28
  */
-class TestScrollView : AppCompatActivity() {
+class TestScrollView : BaseActivity() {
 
      private lateinit var pullScrollView: PullScrollView
 
